@@ -1,19 +1,15 @@
-Reproducing this web app
-To recreate this web app on your own computer, do the following.
+# Bioactivity Prediction Web App
 
-Create conda environment
-Firstly, we will create a conda environment called bioactivity
+This repository contains a web app for bioactivity prediction, built with Streamlit. Follow the steps below to recreate this app on your local computer.
 
-conda create -n bioactivity python=3.7.9
-Secondly, we will login to the bioactivity environement
+## Prerequisites
 
-conda activate bioactivity
-Install prerequisite libraries
-Download requirements.txt file
+- **Conda**: Ensure you have Conda installed to manage the environment.
 
-Pip install libraries
+## Setup Instructions
 
-pip install -r requirements.txt
-Download and unzip contents from GitHub repo
-Launch the app
-streamlit run app.py
+### 1. Clone the Repository
+
+```bash
+git clone <>
+cd <>
