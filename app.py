@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from PIL import Image
+from keras.models import load_model
+from keras.wrappers.scikit_learn import KerasRegressor
 import subprocess
 import os
 import base64
@@ -21,80 +23,76 @@ def filedownload(df):
     href = f'<a href="data:file/csv;base64,{b64}" download="prediction.csv">Download Predictions</a>'
     return href
 
+def model_build_fn():
+    model = Sequential()
+    model.add(Dense(218, input_dim=218, kernel_initializer='normal', activation='relu'))
+    model.add(Dense(650, activation='relu'))
+    model.add(Dense(1, activation='linear'))
+    model.summary()
+  # Compile model
+    model.compile(loss='mse', optimizer='adam', metrics=['mse','mae'])
+    history=model.fit(x_train, y_train, epochs=100, batch_size=150, verbose=1, validation_split=0.2)
+    predictions = model.predict(x_val)  
+    return model
+
 # Model building
-
-def build_model(input_data, load_data):
-    # Load the model using pickle
-    with open('acetylcholinesterase_model.pkl', 'rb') as file:
-        load_model = pickle.load(file)
-
-    # Align features with those used during training
-    trained_features = load_model.feature_names_in_
-
-    # Ensure the input_data has the same features as during training
-    input_data = input_data.reindex(columns=trained_features, fill_value=0)
-
-    # Apply the model to make predictions
-    prediction = load_model.predict(input_data)
+def build_model(input_data):
+    # Reads in saved regression model
+    model2 = KerasRegressor(build_fn=model_build_fn, epochs=10, batch_size=10, verbose=1)
+    model2.model = load_model('saved_model.h5')
+    # Apply model to make predictions
+    prediction = model2.predict(input_data)
     st.header('**Prediction output**')
-    prediction_output = pd.Series(prediction, name='pIC50')
+    prediction_output = pd.Series(prediction + 1.5, name='pIC50')
     molecule_name = pd.Series(load_data[1], name='molecule_name')
     df = pd.concat([molecule_name, prediction_output], axis=1)
     st.write(df)
     st.markdown(filedownload(df), unsafe_allow_html=True)
 
 # Logo image
-image = Image.open('logo.png')
+image = Image.open('logo-removebg-preview.png')
 
 st.image(image, use_column_width=True)
 
 # Page title
 st.markdown("""
-# Bioactivity Prediction App (Acetylcholinesterase)
+## Bioactivity Prediction App (Acetylcholinesterase)
 
 This app allows you to predict the bioactivity towards inhibting the `Acetylcholinesterase` enzyme. `Acetylcholinesterase` is a drug target for Alzheimer's disease.
 
-
-- App built in `Python` + `Streamlit`
-- Descriptor calculated using [PaDEL-Descriptor](http://www.yapcwsoft.com/dd/padeldescriptor/) [[Read the Paper]](https://doi.org/10.1002/jcc.21707).
+**About**
+- Computational drug discovery tool using QSAR modelling with Convolution Neural Networking.
 ---
 """)
 
 # Sidebar
 with st.sidebar.header('1. Upload your CSV data'):
     uploaded_file = st.sidebar.file_uploader("Upload your input file", type=['txt'])
-    st.sidebar.markdown("""
-[Example input file](https://raw.githubusercontent.com/dataprofessor/bioactivity-prediction-app/main/example_acetylcholinesterase.txt)
-""")
-
 
 if st.sidebar.button('Predict'):
-    if uploaded_file is not None:
-        load_data = pd.read_table(uploaded_file, sep=' ', header=None)
-        load_data.to_csv('molecule.smi', sep='\t', header=False, index=False)
+    load_data = pd.read_table(uploaded_file, sep=' ', header=None)
+    load_data.to_csv('molecule.smi', sep = '\t', header = False, index = False)
 
-        st.header('**Original input data**')
-        st.write(load_data)
+    st.header('**Original input data**')
+    st.write(load_data)
 
-        with st.spinner("Calculating descriptors..."):
-            desc_calc()
+    with st.spinner("Calculating descriptors..."):
+        desc_calc()
 
-        # Read in calculated descriptors and display the dataframe
-        st.header('**Calculated molecular descriptors**')
-        desc = pd.read_csv('descriptors_output.csv')
-        st.write(desc)
-        st.write(desc.shape)
+    # Read in calculated descriptors and display the dataframe
+    st.header('**Calculated molecular descriptors**')
+    desc = pd.read_csv('descriptors_output.csv')
+    st.write(desc)
+    st.write(desc.shape)
 
-        # Read descriptor list used in previously built model
-        st.header('**Subset of descriptors from previously built models**')
-        Xlist = list(pd.read_csv('descriptor_list.csv').columns)
-        desc_subset = desc[Xlist]
-        st.write(desc_subset)
-        st.write(desc_subset.shape)
+    # Read descriptor list used in previously built model
+    st.header('**Subset of descriptors from previously built models**')
+    Xlist = list(pd.read_csv('descriptor_list.csv').columns)
+    desc_subset = desc[Xlist]
+    st.write(desc_subset)
+    st.write(desc_subset.shape)
 
-        # Apply trained model to make prediction on query compounds
-        build_model(desc_subset, load_data)  # Ensure both arguments are passed here
-    else:
-        st.error("Please upload a file before clicking Predict.")
+    # Apply trained model to make prediction on query compounds
+    build_model(desc_subset)
 else:
     st.info('Upload input data in the sidebar to start!')
