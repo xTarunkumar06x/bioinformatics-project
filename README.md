@@ -1,5 +1,8 @@
 # Bioactivity Prediction Web App
 
+# DEMO
+https://github.com/user-attachments/assets/c4962ac9-721a-41e2-8360-b3a8454ac80a
+
 This repository contains a web app for bioactivity prediction, built with Streamlit. Follow the steps below to recreate this app on your local computer.
 
 ## Reproducing this web app
