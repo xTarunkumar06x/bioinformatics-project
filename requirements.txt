@@ -1,0 +1,7 @@
+conda
+streamlit
+pandas
+numpy
+keras
+tensorflow-cpu
+subprocess.run
