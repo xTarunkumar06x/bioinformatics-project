@@ -5,12 +5,28 @@ This repository contains a web app for bioactivity prediction, built with Stream
 ## Reproducing this web app
 To recreate this web app on your own computer, do the following.
 
-- **Conda**: Ensure you have Conda installed to manage the environment.
-
-## Setup Instructions
-
-### 1. Clone the Repository
+##Create conda environment
+Firstly, we will create a conda environment called bioactivity
 
 ```bash
-git clone <>
-cd <>
+conda create -n bioactivity python=3.7.9
+```
+Secondly, we will login to the bioactivity environement
+```bash
+conda activate bioactivity
+```
+
+## Install prerequisite libraries
+Download requirements.txt file
+
+Pip install libraries
+```bash
+pip install -r requirements.txt
+```
+### Download and unzip contents from GitHub repo
+
+##Launch the app
+
+```bash
+streamlit run app.py
+```
